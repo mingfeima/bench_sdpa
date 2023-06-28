@@ -81,8 +81,8 @@ def test2(B, T, dtype=torch.float32, causal=False, train=False):
 
         cmp(grad_q, grad_q2, "## grad_q: ", 5e-6)
         # the error is bigger for grad_k, it need accumulation on N
-        cmp(grad_k, grad_k2, "## grad_k: ", 5e-6)
-        cmp(grad_v, grad_v2, "## grad_v: ")
+        cmp(grad_k, grad_k2, "## grad_k: ", 5e-6, 5e-6)
+        cmp(grad_v, grad_v2, "## grad_v: ", 5e-6)
 
 
 # inference test
@@ -91,7 +91,7 @@ test2(2, 1079, torch.float32, True, False)
 
 # training test
 test2(2, 267, torch.float32, False, True)
-test2(2, 19, torch.float32, False, True)
+test2(2, 276, torch.float32, True, True)
 
 
 
