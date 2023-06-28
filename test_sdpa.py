@@ -67,7 +67,7 @@ def test2(B, T, dtype=torch.float32, causal=False, train=False):
     v2 = v2.view(B, T, n_head, n_embd // n_head).transpose(1, 2) # (B, nh, T, hs)
 
     out = torch.nn.functional.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=0, is_causal=causal)
-    out2, lse2 = torch._scaled_dot_product_efficient_attention(q2, k2, v2, compute_log_sumexp=train, is_causal=causal)
+    out2, lse2, _, _ = torch._scaled_dot_product_efficient_attention(q2, k2, v2, compute_log_sumexp=train, is_causal=causal)
 
     cmp(out, out2, "## attn: ")
 

@@ -37,14 +37,14 @@ def test_single_run(B, T, dtype=torch.float32, train=False, is_causal=False):
         if default:
             y = torch.nn.functional.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=dropout if train else 0, is_causal=is_causal)
         else:
-            y, lse = torch._scaled_dot_product_efficient_attention(q, k, v, compute_log_sumexp=train, is_causal=is_causal)
+            y, lse, _, _ = torch._scaled_dot_product_efficient_attention(q, k, v, compute_log_sumexp=train, is_causal=is_causal)
 
     t1 = time()
     for _ in range(niters):
         if default:
             y = torch.nn.functional.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=dropout if train else 0, is_causal=is_causal)
         else:
-            y, lse = torch._scaled_dot_product_efficient_attention(q, k, v, compute_log_sumexp=train, is_causal=is_causal)
+            y, lse, _, _ = torch._scaled_dot_product_efficient_attention(q, k, v, compute_log_sumexp=train, is_causal=is_causal)
 
         if train:
             y.sum().backward()
