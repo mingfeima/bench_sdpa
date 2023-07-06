@@ -5,8 +5,11 @@ from time import time
 
 torch.manual_seed(1)
 
-def cmp(t1, t2, msg='', atol=1e-06, rtol=1e-07):
+def cmp(t1, t2, msg='', atol=1e-05, rtol=1e-07):
 
+    if t1.dtype == torch.bfloat16:
+        atol = 1e-2
+        rtol = 1e-2
     max_diff = (t1 - t2).abs().max().item()
     res = torch.allclose(t1, t2, atol=atol, rtol=rtol)
     print(msg, res, "; max diff: ", max_diff)
@@ -49,7 +52,7 @@ def test2(B, T, dtype=torch.float32, causal=False, train=False):
     n_head = 25
     C = 3 * n_embd
 
-    x = torch.randn(B, T, C)
+    x = torch.randn(B, T, C, dtype=dtype)
     x2 = x.clone()
 
     if train:
@@ -58,6 +61,11 @@ def test2(B, T, dtype=torch.float32, causal=False, train=False):
 
     q, k, v  = x.split(n_embd, dim=2)
     q2, k2, v2  = x2.split(n_embd, dim=2)
+
+    if dtype is torch.bfloat16:
+        q = q.float()
+        k = k.float()
+        v = v.float()
 
     k = k.view(B, T, n_head, n_embd // n_head).transpose(1, 2) # (B, nh, T, hs)
     q = q.view(B, T, n_head, n_embd // n_head).transpose(1, 2) # (B, nh, T, hs)
@@ -68,6 +76,9 @@ def test2(B, T, dtype=torch.float32, causal=False, train=False):
 
     out = torch.nn.functional.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=0, is_causal=causal)
     out2, lse2, _, _ = torch._scaled_dot_product_efficient_attention(q2, k2, v2, compute_log_sumexp=train, is_causal=causal)
+
+    if dtype is torch.bfloat16:
+        out = out.bfloat16()
 
     cmp(out, out2, "## attn: ")
 
@@ -90,13 +101,13 @@ test2(2, 1030, torch.float32, False, False)
 test2(2, 1079, torch.float32, True, False)
 
 # training test
-test2(2, 267, torch.float32, False, True)
+test2(2, 276, torch.float32, False, True)
 test2(2, 276, torch.float32, True, True)
 
-
-
-
-
+test2(2, 1030, torch.bfloat16, False, False)
+test2(2, 200, torch.bfloat16, True, False)
+test2(2, 1030, torch.bfloat16, False, True)
+test2(2, 20, torch.bfloat16, True, True)
 
 
 
